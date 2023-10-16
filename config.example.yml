@@ -1,0 +1,12 @@
+# just for example
+
+listen:
+  host: 127.0.0.1
+  port: 8080
+
+db:
+  db_name: db
+  host: 127.0.0.1
+  port: 5433
+  ssl_mode: disable
+  password: password
