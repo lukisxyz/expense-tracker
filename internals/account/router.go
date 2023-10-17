@@ -15,8 +15,41 @@ func Router() *chi.Mux {
 	r.Get("/{id}", findItemByIdHandler)
 	r.Post("/", createItemHandler)
 	r.Patch("/{id}", updateItemHandler)
+	r.Post("/login", loginHandler)
 
 	return r
+}
+
+type loginBodyRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func loginHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	var p loginBodyRequest
+	err := json.NewDecoder(r.Body).Decode(&p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	resp, err := loginAccount(ctx, p.Email, p.Password)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
 }
 
 func findItemByIdHandler(

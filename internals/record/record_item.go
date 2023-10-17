@@ -3,19 +3,27 @@ package record
 import (
 	"time"
 
-	"github.com/flukis/expt/service/internals/book"
-	"github.com/flukis/expt/service/internals/category"
 	"github.com/oklog/ulid/v2"
 	"gopkg.in/guregu/null.v4"
 )
+
+type RecordCategory struct {
+	Id   ulid.ULID
+	Name string
+}
+
+type RecordBook struct {
+	Id   ulid.ULID
+	Name string
+}
 
 type Record struct {
 	Id        ulid.ULID
 	Note      string
 	Amount    float64
 	IsExpense bool
-	Category  category.Category
-	Book      book.Book
+	Category  RecordCategory
+	Book      RecordBook
 	CreatedAt time.Time
 	UpdatedAt null.Time
 }
@@ -36,10 +44,10 @@ func NewRecord(
 		IsExpense: isExpense,
 		Amount:    amount,
 		CreatedAt: time.Now(),
-		Category: category.Category{
+		Category: RecordCategory{
 			Id: categoryId,
 		},
-		Book: book.Book{
+		Book: RecordBook{
 			Id: bookId,
 		},
 	}

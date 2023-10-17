@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/flukis/expt/service/internals/book"
-	"github.com/flukis/expt/service/internals/category"
 	"github.com/flukis/expt/service/utils"
 	"github.com/oklog/ulid/v2"
 	"gopkg.in/guregu/null.v4"
@@ -13,35 +11,33 @@ import (
 
 func (b *Record) MarshalJSON() ([]byte, error) {
 	var j struct {
-		Id           ulid.ULID `json:"id"`
-		Note         string    `json:"note"`
-		Amount       float64   `json:"amount"`
-		CategoryId   ulid.ULID `json:"category_id"`
-		CategoryName string    `json:"category_name"`
-		BookId       ulid.ULID `json:"book_id"`
-		BookName     string    `json:"book_name"`
-		CreatedAt    time.Time `json:"created_at"`
+		Id        ulid.ULID      `json:"id"`
+		Note      string         `json:"note"`
+		Amount    float64        `json:"amount"`
+		Category  RecordCategory `json:"category"`
+		Book      RecordBook     `json:"book"`
+		CreatedAt time.Time      `json:"created_at"`
 	}
 	j.Id = b.Id
 	j.Amount = b.Amount
 	j.Note = b.Note
 	j.CreatedAt = b.CreatedAt
-	j.CategoryId = b.Category.Id
-	j.CategoryName = b.Category.Name
-	j.BookId = b.Book.Id
-	j.BookName = b.Book.Name
+	j.Category.Id = b.Category.Id
+	j.Category.Name = b.Category.Name
+	j.Book.Id = b.Book.Id
+	j.Book.Name = b.Book.Name
 	return json.Marshal(j)
 }
 
 func (b *Record) UnmarshalJSON(data []byte) error {
 	var j struct {
-		Id        ulid.ULID         `json:"id"`
-		Note      string            `json:"note"`
-		Amount    float64           `json:"amount"`
-		CreatedAt string            `json:"created_at"`
-		Category  category.Category `json:"category"`
-		Book      book.Book         `json:"book"`
-		UpdatedAt null.String       `json:"updated_at"`
+		Id        ulid.ULID      `json:"id"`
+		Note      string         `json:"note"`
+		Amount    float64        `json:"amount"`
+		CreatedAt string         `json:"created_at"`
+		Category  RecordCategory `json:"category"`
+		Book      RecordBook     `json:"book"`
+		UpdatedAt null.String    `json:"updated_at"`
 	}
 	err := json.Unmarshal(data, &j)
 	if err != nil {

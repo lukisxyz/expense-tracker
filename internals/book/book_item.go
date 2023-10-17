@@ -13,7 +13,6 @@ type Book struct {
 	CreatedAt time.Time
 	UpdatedAt null.Time
 	OwnerId   ulid.ULID
-	IsDefault bool
 }
 
 func NewBook(name string, ownerId ulid.ULID) (Book, error) {
@@ -22,7 +21,6 @@ func NewBook(name string, ownerId ulid.ULID) (Book, error) {
 		Id:        ulid.Make(),
 		Name:      name,
 		OwnerId:   ownerId,
-		IsDefault: false,
 		CreatedAt: time.Now(),
 	}
 	return book, nil

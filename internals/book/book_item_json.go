@@ -13,12 +13,10 @@ func (b *Book) MarshalJSON() ([]byte, error) {
 	var j struct {
 		Id        ulid.ULID `json:"id"`
 		Name      string    `json:"name"`
-		IsDefault bool      `json:"is_default"`
 		CreatedAt time.Time `json:"created_at"`
 	}
 	j.Id = b.Id
 	j.Name = b.Name
-	j.IsDefault = b.IsDefault
 	j.CreatedAt = b.CreatedAt
 	return json.Marshal(j)
 }
@@ -26,7 +24,6 @@ func (b *Book) MarshalJSON() ([]byte, error) {
 func (b *Book) UnmarshalJSON(data []byte) error {
 	var j struct {
 		Id        ulid.ULID   `json:"id"`
-		IsDefault bool        `json:"is_default"`
 		Name      string      `json:"name"`
 		CreatedAt string      `json:"created_at"`
 		UpdatedAt null.String `json:"updated_at"`
@@ -44,7 +41,6 @@ func (b *Book) UnmarshalJSON(data []byte) error {
 
 	b = &Book{ //nolint:all // not implement yet
 		Id:        j.Id,
-		IsDefault: j.IsDefault,
 		Name:      j.Name,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,

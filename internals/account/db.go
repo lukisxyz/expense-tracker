@@ -9,9 +9,9 @@ import (
 var (
 	pool *pgxpool.Pool
 
-	ErrAssignPool = errors.New("cannot assign nil pool")
-
-	ErrNotFound = errors.New("account: item not found")
+	ErrAssignPool    = errors.New("cannot assign nil pool")
+	ErrNotFound      = errors.New("account: item not found")
+	ErrWrongPassword = errors.New("account: password wrong")
 )
 
 func SetPool(newPool *pgxpool.Pool) error {

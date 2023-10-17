@@ -20,7 +20,6 @@ func findItemById(
 		SELECT
 			id,
 			name,
-			is_default,
 			owner_id,
 			created_at,
 			updated_at
@@ -38,7 +37,6 @@ func findItemById(
 	if err := row.Scan(
 		&item.Id,
 		&item.Name,
-		&item.IsDefault,
 		&item.OwnerId,
 		&item.CreatedAt,
 		&item.UpdatedAt,
@@ -64,7 +62,6 @@ func findDefaultItemById(
 		SELECT
 			id,
 			name,
-			is_default,
 			owner_id,
 			created_at,
 			updated_at
@@ -82,7 +79,6 @@ func findDefaultItemById(
 	if err := row.Scan(
 		&item.Id,
 		&item.Name,
-		&item.IsDefault,
 		&item.OwnerId,
 		&item.CreatedAt,
 		&item.UpdatedAt,
@@ -105,14 +101,13 @@ func saveItem(
 		INSERT INTO book(
 			id,
 			name,
-			is_default,
 			owner_id,
 			created_at
 		) VALUES (
-			$1, $2, $3, $4, $5
+			$1, $2, $3, $4
 		) ON CONFLICT(id)
 			DO UPDATE SET
-			name=$2, is_default=$3, owner_id=$4, updated_at=$6
+			name=$2, owner_id=$3, updated_at=$5
 	`
 
 	_, err := tx.Exec(
@@ -120,7 +115,6 @@ func saveItem(
 		query,
 		item.Id,
 		item.Name,
-		item.IsDefault,
 		item.OwnerId,
 		item.CreatedAt,
 		item.UpdatedAt,

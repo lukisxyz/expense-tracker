@@ -52,7 +52,6 @@ func findItemsByOwnerId(
 		`
 			SELECT
 				id,
-				is_default,
 				name,
 				owner_id,
 				created_at,
@@ -73,7 +72,6 @@ func findItemsByOwnerId(
 	var i int
 	for i = range items {
 		var id ulid.ULID
-		var isDefault bool
 		var name string
 		var ownerId ulid.ULID
 		var createdAt time.Time
@@ -83,7 +81,6 @@ func findItemsByOwnerId(
 		}
 		if err := rows.Scan(
 			&id,
-			&isDefault,
 			&name,
 			&ownerId,
 			&createdAt,
@@ -94,7 +91,6 @@ func findItemsByOwnerId(
 		}
 		items[i] = Book{
 			Id:        id,
-			IsDefault: isDefault,
 			Name:      name,
 			CreatedAt: createdAt,
 			UpdatedAt: updatedAt,

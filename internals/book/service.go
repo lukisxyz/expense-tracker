@@ -162,8 +162,7 @@ func makeDefault(
 		return
 	}
 
-	if err != nil && err == ErrNotFound {
-		existingDefaultBook.IsDefault = false
+	if err != nil && err != ErrNotFound {
 		existingDefaultBook.UpdatedAt = null.TimeFrom(time.Now())
 		err = saveItem(ctx, tx, &existingDefaultBook)
 		if err != nil {
@@ -175,7 +174,6 @@ func makeDefault(
 		}
 	}
 
-	book.IsDefault = true
 	book.UpdatedAt = null.TimeFrom(time.Now())
 	err = saveItem(ctx, tx, &book)
 	if err != nil {

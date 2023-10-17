@@ -12,12 +12,67 @@ import (
 func Router() *chi.Mux {
 	r := chi.NewMux()
 
-	r.Get("/", listItemHandler)
+	r.Get("/", listItemBookHandler)
+	r.Get("/{id}", findItemByIdHandler)
+	r.Get("/category", listItemCategoryHandler)
 	r.Post("/", createItemHandler)
 	return r
 }
 
-func listItemHandler(
+func findItemByIdHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	idStr := chi.URLParam(r, "id")
+	id, err := ulid.Parse(idStr)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	ctx := r.Context()
+	resp, err := findRecordById(ctx, id)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+}
+
+func listItemCategoryHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	queryParams := r.URL.Query()
+	idStr := queryParams.Get("category_id")
+	id, err := ulid.Parse(idStr)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx := r.Context()
+	resp, err := listRecordByCategory(ctx, id)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+}
+
+func listItemBookHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -30,7 +85,7 @@ func listItemHandler(
 	}
 
 	ctx := r.Context()
-	resp, err := listRecords(ctx, id)
+	resp, err := listRecordByBook(ctx, id)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
 		return

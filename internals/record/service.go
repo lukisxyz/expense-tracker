@@ -6,7 +6,30 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-func listRecords(
+func listRecordByCategory(
+	ctx context.Context,
+	categoryId ulid.ULID,
+) (
+	RecordList,
+	error,
+) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return emptyList, err
+	}
+
+	list, err := findItemsByCategoryId(ctx, tx, categoryId)
+	if err != nil {
+		return emptyList, err
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return emptyList, err
+	}
+	return list, err
+}
+
+func listRecordByBook(
 	ctx context.Context,
 	bookId ulid.ULID,
 ) (
@@ -67,26 +90,26 @@ func saveRecord(
 	return ctg.Id, nil
 }
 
-// func findRecordById(
-// 	ctx context.Context,
-// 	id ulid.ULID,
-// ) (
-// 	Record,
-// 	error,
-// ) {
-// 	tx, err := pool.Begin(ctx)
-// 	if err != nil {
-// 		return Record{}, err
-// 	}
+func findRecordById(
+	ctx context.Context,
+	id ulid.ULID,
+) (
+	Record,
+	error,
+) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return Record{}, err
+	}
 
-// 	item, err := findItemById(ctx, tx, id)
-// 	if err != nil {
-// 		return Record{}, err
-// 	}
+	item, err := findItemById(ctx, tx, id)
+	if err != nil {
+		return Record{}, err
+	}
 
-// 	err = tx.Commit(ctx)
-// 	if err != nil {
-// 		return Record{}, err
-// 	}
-// 	return item, err
-// }
+	err = tx.Commit(ctx)
+	if err != nil {
+		return Record{}, err
+	}
+	return item, err
+}
