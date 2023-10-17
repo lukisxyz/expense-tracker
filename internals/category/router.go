@@ -1,4 +1,4 @@
-package book
+package category
 
 import (
 	"encoding/json"
@@ -12,69 +12,11 @@ import (
 func Router() *chi.Mux {
 	r := chi.NewMux()
 
-	r.Get("/", listItemHandler)
-	r.Get("/{id}", findItemByIdHandler)
 	r.Post("/", createItemHandler)
+	r.Get("/{id}", findItemByIdHandler)
 	r.Patch("/{owner_id}/{id}", updateItemHandler)
-	r.Patch("/{owner_id}/{id}/default", makeDefaultHandler)
-
+	r.Get("/", listItemHandler)
 	return r
-}
-
-func findItemByIdHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	idStr := chi.URLParam(r, "id")
-	id, err := ulid.Parse(idStr)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	ctx := r.Context()
-	resp, err := findBookById(ctx, id)
-	if err != nil {
-		response.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	w.Header().Add("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		response.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-}
-
-func makeDefaultHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	ownerIdStr := chi.URLParam(r, "owner_id")
-	ownerId, err := ulid.Parse(ownerIdStr)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	idStr := chi.URLParam(r, "id")
-	id, err := ulid.Parse(idStr)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	ctx := r.Context()
-
-	err = makeDefault(ctx, ownerId, id)
-	if err != nil {
-		response.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	w.Header().Add("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
 }
 
 func listItemHandler(
@@ -90,7 +32,33 @@ func listItemHandler(
 	}
 
 	ctx := r.Context()
-	resp, err := listBooks(ctx, id)
+	resp, err := listCategories(ctx, id)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+}
+
+func findItemByIdHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	idStr := chi.URLParam(r, "id")
+	id, err := ulid.Parse(idStr)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	ctx := r.Context()
+	resp, err := findCategoryById(ctx, id)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -122,7 +90,7 @@ func createItemHandler(
 
 	ctx := r.Context()
 
-	resp, err := saveBook(ctx, p.OwnerId, p.Name)
+	resp, err := saveCategory(ctx, p.OwnerId, p.Name)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
 		return

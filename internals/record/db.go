@@ -1,4 +1,4 @@
-package book
+package record
 
 import (
 	"errors"
@@ -10,8 +10,7 @@ var (
 	pool *pgxpool.Pool
 
 	ErrAssignPool = errors.New("cannot assign nil pool")
-
-	ErrNotFound = errors.New("book: item not found")
+	ErrNotFound   = errors.New("record: item not found")
 )
 
 func SetPool(newPool *pgxpool.Pool) error {

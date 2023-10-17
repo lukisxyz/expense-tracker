@@ -1,4 +1,4 @@
-package book
+package category
 
 import (
 	"context"
@@ -10,14 +10,14 @@ import (
 	"gopkg.in/guregu/null.v4"
 )
 
-type BookList struct {
-	Books []Book `json:"data"`
-	Count int    `json:"count"`
+type CategoryList struct {
+	Categories []Category `json:"data"`
+	Count      int        `json:"count"`
 }
 
-var emptyList = BookList{
-	Books: []Book{},
-	Count: 0,
+var emptyList = CategoryList{
+	Categories: []Category{},
+	Count:      0,
 }
 
 func findItemsByOwnerId(
@@ -25,19 +25,19 @@ func findItemsByOwnerId(
 	tx pgx.Tx,
 	id ulid.ULID,
 ) (
-	BookList,
+	CategoryList,
 	error,
 ) {
 	var itemCount int
 
 	row := tx.QueryRow(
 		ctx,
-		`SELECT COUNT(id) as c FROM book WHERE owner_id = $1`,
+		`SELECT COUNT(id) as c FROM category WHERE owner_id = $1`,
 		id,
 	)
 
 	if err := row.Scan(&itemCount); err != nil {
-		log.Warn().Err(err).Msg("cannot find a count in book")
+		log.Warn().Err(err).Msg("cannot find a count in category")
 		return emptyList, err
 	}
 
@@ -45,23 +45,22 @@ func findItemsByOwnerId(
 		return emptyList, nil
 	}
 
-	log.Debug().Int("count", itemCount).Msg("found book items")
-	items := make([]Book, itemCount)
+	log.Debug().Int("count", itemCount).Msg("found category items")
+	items := make([]Category, itemCount)
 	rows, err := tx.Query(
 		ctx,
 		`
 			SELECT
 				id,
-				is_default,
 				name,
 				owner_id,
 				created_at,
 				updated_at
 			FROM
-				book
+				category
 			WHERE
 				owner_id = $1
-			ORDER BY id
+			ORDER by id
 		`,
 		id,
 	)
@@ -73,7 +72,6 @@ func findItemsByOwnerId(
 	var i int
 	for i = range items {
 		var id ulid.ULID
-		var isDefault bool
 		var name string
 		var ownerId ulid.ULID
 		var createdAt time.Time
@@ -83,7 +81,6 @@ func findItemsByOwnerId(
 		}
 		if err := rows.Scan(
 			&id,
-			&isDefault,
 			&name,
 			&ownerId,
 			&createdAt,
@@ -92,9 +89,8 @@ func findItemsByOwnerId(
 			log.Warn().Err(err).Msg("cannot scan an item")
 			return emptyList, err
 		}
-		items[i] = Book{
+		items[i] = Category{
 			Id:        id,
-			IsDefault: isDefault,
 			Name:      name,
 			CreatedAt: createdAt,
 			UpdatedAt: updatedAt,
@@ -102,9 +98,9 @@ func findItemsByOwnerId(
 		}
 	}
 
-	list := BookList{
-		Books: items,
-		Count: itemCount,
+	list := CategoryList{
+		Categories: items,
+		Count:      itemCount,
 	}
 
 	return list, nil

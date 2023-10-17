@@ -31,7 +31,7 @@ func listBooks(
 	return list, err
 }
 
-func findBook(
+func findBookById(
 	ctx context.Context,
 	id ulid.ULID,
 ) (

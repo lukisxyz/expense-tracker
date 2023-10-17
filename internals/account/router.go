@@ -1,4 +1,4 @@
-package book
+package account
 
 import (
 	"encoding/json"
@@ -12,11 +12,9 @@ import (
 func Router() *chi.Mux {
 	r := chi.NewMux()
 
-	r.Get("/", listItemHandler)
 	r.Get("/{id}", findItemByIdHandler)
 	r.Post("/", createItemHandler)
-	r.Patch("/{owner_id}/{id}", updateItemHandler)
-	r.Patch("/{owner_id}/{id}/default", makeDefaultHandler)
+	r.Patch("/{id}", updateItemHandler)
 
 	return r
 }
@@ -33,64 +31,7 @@ func findItemByIdHandler(
 	}
 
 	ctx := r.Context()
-	resp, err := findBookById(ctx, id)
-	if err != nil {
-		response.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	w.Header().Add("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		response.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-}
-
-func makeDefaultHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	ownerIdStr := chi.URLParam(r, "owner_id")
-	ownerId, err := ulid.Parse(ownerIdStr)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	idStr := chi.URLParam(r, "id")
-	id, err := ulid.Parse(idStr)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	ctx := r.Context()
-
-	err = makeDefault(ctx, ownerId, id)
-	if err != nil {
-		response.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	w.Header().Add("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-}
-
-func listItemHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	queryParams := r.URL.Query()
-	paramValue := queryParams.Get("id")
-	id, err := ulid.Parse(paramValue)
-	if err != nil {
-		response.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	ctx := r.Context()
-	resp, err := listBooks(ctx, id)
+	resp, err := findAccountById(ctx, id)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -105,8 +46,8 @@ func listItemHandler(
 }
 
 type createItemBodyRequest struct {
-	OwnerId ulid.ULID `json:"owner_id"`
-	Name    string    `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func createItemHandler(
@@ -122,7 +63,7 @@ func createItemHandler(
 
 	ctx := r.Context()
 
-	resp, err := saveBook(ctx, p.OwnerId, p.Name)
+	resp, err := saveAccount(ctx, p.Email, p.Password)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -137,7 +78,8 @@ func createItemHandler(
 }
 
 type updateItemBodyRequest struct {
-	Name string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func updateItemHandler(
@@ -151,13 +93,6 @@ func updateItemHandler(
 		return
 	}
 
-	ownerIdStr := chi.URLParam(r, "owner_id")
-	ownerId, err := ulid.Parse(ownerIdStr)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
-
 	idStr := chi.URLParam(r, "id")
 	id, err := ulid.Parse(idStr)
 	if err != nil {
@@ -167,7 +102,7 @@ func updateItemHandler(
 
 	ctx := r.Context()
 
-	resp, err := updateBook(ctx, id, ownerId, p.Name)
+	resp, err := updateAccount(ctx, id, p.Email, p.Password)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
 		return

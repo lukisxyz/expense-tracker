@@ -7,8 +7,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/flukis/expt/service/internals/account"
 	"github.com/flukis/expt/service/internals/book"
+	"github.com/flukis/expt/service/internals/category"
 	"github.com/flukis/expt/service/internals/config"
+	"github.com/flukis/expt/service/internals/record"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -39,11 +42,23 @@ func main() {
 	}
 
 	if err := book.SetPool(pool); err != nil {
-		log.Error().Err(err).Msg("unable to set pool")
+		log.Error().Err(err).Msg("unable to set pool on book")
+	}
+	if err := category.SetPool(pool); err != nil {
+		log.Error().Err(err).Msg("unable to set pool on category")
+	}
+	if err := record.SetPool(pool); err != nil {
+		log.Error().Err(err).Msg("unable to set pool on record")
+	}
+	if err := account.SetPool(pool); err != nil {
+		log.Error().Err(err).Msg("unable to set pool on account")
 	}
 
 	r := chi.NewRouter()
 	r.Mount("/api/book", book.Router())
+	r.Mount("/api/category", category.Router())
+	r.Mount("/api/record", record.Router())
+	r.Mount("/api/account", account.Router())
 
 	log.Info().Msg(fmt.Sprintf("starting up server on: %s", cfg.Listen.Addr()))
 	server := &http.Server{
