@@ -52,6 +52,51 @@ func listRecordByBook(
 	return list, err
 }
 
+func updateRecord(
+	ctx context.Context,
+	recordId ulid.ULID,
+	bookId ulid.ULID,
+	categoryId ulid.ULID,
+	note string,
+	amount float64,
+	isExpense bool,
+) (
+	id ulid.ULID,
+	err error,
+) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return
+	}
+
+	item, err := findItemById(ctx, tx, recordId)
+	if err != nil {
+		return
+	}
+
+	item.Amount = amount
+	item.Note = note
+	item.IsExpense = isExpense
+	item.Category.Id = categoryId
+	item.Book.Id = bookId
+
+	err = saveItem(ctx, tx, &item)
+	if err != nil {
+		errRB := tx.Rollback(ctx)
+		if errRB != nil {
+			return
+		}
+		return
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return
+	}
+
+	return item.Id, nil
+}
+
 func saveRecord(
 	ctx context.Context,
 	bookId ulid.ULID,

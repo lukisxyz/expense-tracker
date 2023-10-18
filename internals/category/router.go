@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	customMiddleware "github.com/flukis/expt/service/internals/middleware"
 	"github.com/flukis/expt/service/utils/response"
 	"github.com/go-chi/chi/v5"
 	"github.com/oklog/ulid/v2"
@@ -14,7 +15,7 @@ func Router() *chi.Mux {
 
 	r.Post("/", createItemHandler)
 	r.Get("/{id}", findItemByIdHandler)
-	r.Patch("/{owner_id}/{id}", updateItemHandler)
+	r.Patch("/{id}", updateItemHandler)
 	r.Get("/", listItemHandler)
 	return r
 }
@@ -23,15 +24,10 @@ func listItemHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	queryParams := r.URL.Query()
-	paramValue := queryParams.Get("id")
-	id, err := ulid.Parse(paramValue)
-	if err != nil {
-		response.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
 
 	ctx := r.Context()
+	res := ctx.Value(customMiddleware.ClaimJWTKey)
+	id := res.(*customMiddleware.MapClaimResponse).Id
 	resp, err := listCategories(ctx, id)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
@@ -73,8 +69,7 @@ func findItemByIdHandler(
 }
 
 type createItemBodyRequest struct {
-	OwnerId ulid.ULID `json:"owner_id"`
-	Name    string    `json:"name"`
+	Name string `json:"name"`
 }
 
 func createItemHandler(
@@ -89,8 +84,10 @@ func createItemHandler(
 	}
 
 	ctx := r.Context()
+	res := ctx.Value(customMiddleware.ClaimJWTKey)
+	ownerId := res.(*customMiddleware.MapClaimResponse).Id
 
-	resp, err := saveCategory(ctx, p.OwnerId, p.Name)
+	resp, err := saveCategory(ctx, ownerId, p.Name)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -119,12 +116,9 @@ func updateItemHandler(
 		return
 	}
 
-	ownerIdStr := chi.URLParam(r, "owner_id")
-	ownerId, err := ulid.Parse(ownerIdStr)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
+	ctx := r.Context()
+	res := ctx.Value(customMiddleware.ClaimJWTKey)
+	ownerId := res.(*customMiddleware.MapClaimResponse).Id
 
 	idStr := chi.URLParam(r, "id")
 	id, err := ulid.Parse(idStr)
@@ -132,8 +126,6 @@ func updateItemHandler(
 		response.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
-
-	ctx := r.Context()
 
 	resp, err := updateBook(ctx, id, ownerId, p.Name)
 	if err != nil {
