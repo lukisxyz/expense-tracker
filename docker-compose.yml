@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   database:
     image: postgres:15-alpine
@@ -16,9 +17,17 @@ services:
       interval: 30s
       timeout: 10s
 
+  cache:
+    image: redis:6.2-alpine
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock    
+    ports:
+      - 6377:6379  
+
 networks:
   db:
     driver: bridge
 
 volumes:
   db:
+  cache:

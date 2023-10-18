@@ -121,6 +121,7 @@ func saveItem(
 		item.Id,
 		item.Email,
 		item.Password,
+		item.DefaultBookId,
 		item.CreatedAt,
 		item.UpdatedAt,
 	)

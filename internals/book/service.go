@@ -113,6 +113,11 @@ func updateBook(
 		return
 	}
 
+	if book.OwnerId != ownerId {
+		err = ErrNotAuthorized
+		return
+	}
+
 	book.OwnerId = ownerId
 	book.Name = name
 	book.UpdatedAt = null.TimeFrom(time.Now())
@@ -132,62 +137,4 @@ func updateBook(
 	}
 
 	return book, nil
-}
-
-func makeDefault(
-	ctx context.Context,
-	ownerId ulid.ULID,
-	id ulid.ULID,
-) (err error) {
-	tx, err := pool.Begin(ctx)
-	if err != nil {
-		return
-	}
-
-	book, err := findItemById(ctx, tx, id)
-	if err != nil {
-		errRB := tx.Rollback(ctx)
-		if errRB != nil {
-			return
-		}
-		return
-	}
-
-	existingDefaultBook, err := findDefaultItemById(ctx, tx, ownerId)
-	if err != nil && err != ErrNotFound {
-		errRB := tx.Rollback(ctx)
-		if errRB != nil {
-			return
-		}
-		return
-	}
-
-	if err != nil && err != ErrNotFound {
-		existingDefaultBook.UpdatedAt = null.TimeFrom(time.Now())
-		err = saveItem(ctx, tx, &existingDefaultBook)
-		if err != nil {
-			errRB := tx.Rollback(ctx)
-			if errRB != nil {
-				return
-			}
-			return
-		}
-	}
-
-	book.UpdatedAt = null.TimeFrom(time.Now())
-	err = saveItem(ctx, tx, &book)
-	if err != nil {
-		errRB := tx.Rollback(ctx)
-		if errRB != nil {
-			return
-		}
-		return
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return
-	}
-
-	return nil
 }

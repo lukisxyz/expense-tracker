@@ -30,19 +30,25 @@ func loadEnvUint(key string, res *uint) {
 }
 
 type config struct {
-	Listen listenConfig `yaml:"listen" json:"listen"`
-	DBCfg  pgConfig     `yaml:"db" json:"db"`
+	Listen   listenConfig `yaml:"listen" json:"listen"`
+	DBCfg    pgConfig     `yaml:"db" json:"db"`
+	TokenCfg tokenConfig  `yaml:"token" json:"token"`
+	RedisCfg redisConfig  `yaml:"redis" json:"redis"`
 }
 
 func (c *config) loadFromEnv() {
 	c.Listen.loadFromEnv()
 	c.DBCfg.loadFromEnv()
+	c.TokenCfg.loadFromEnv()
+	c.RedisCfg.loadFromEnv()
 }
 
 func defaultConfig() config {
 	return config{
-		Listen: defaultListenConfig(),
-		DBCfg:  defaultPgConfig(),
+		Listen:   defaultListenConfig(),
+		DBCfg:    defaultPgConfig(),
+		TokenCfg: defaultTokenConfig(),
+		RedisCfg: defaultredisConfig(),
 	}
 }
 

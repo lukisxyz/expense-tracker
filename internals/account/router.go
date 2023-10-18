@@ -44,9 +44,20 @@ func loginHandler(
 		return
 	}
 
+	token, err := generateJwtToken(
+		ctx,
+		resp.Id,
+		resp.DefaultBookId,
+		resp.Email,
+	)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
 	w.Header().Add("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
+	if err := json.NewEncoder(w).Encode(token); err != nil {
 		response.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}

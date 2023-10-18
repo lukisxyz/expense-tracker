@@ -11,8 +11,10 @@ import (
 	"github.com/flukis/expt/service/internals/book"
 	"github.com/flukis/expt/service/internals/category"
 	"github.com/flukis/expt/service/internals/config"
+	customMiddleware "github.com/flukis/expt/service/internals/middleware"
 	"github.com/flukis/expt/service/internals/record"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 )
@@ -29,6 +31,13 @@ func main() {
 
 	cfg := config.LoadConfig(configFileName)
 	log.Debug().Any("config", cfg).Msg("config loaded")
+
+	account.SetTokenizeConfig(
+		int(cfg.TokenCfg.AccessDuration),
+		int(cfg.TokenCfg.RefreshDuration),
+		cfg.TokenCfg.Key,
+	)
+	customMiddleware.SetTokenizeConfig(cfg.TokenCfg.Key)
 
 	ctx := context.Background()
 
@@ -55,10 +64,16 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.Mount("/api/book", book.Router())
-	r.Mount("/api/category", category.Router())
-	r.Mount("/api/record", record.Router())
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.CleanPath)
 	r.Mount("/api/account", account.Router())
+	r.Group(func(r chi.Router) {
+		r.Use(customMiddleware.AuthJwt)
+		r.Mount("/api/book", book.Router())
+		r.Mount("/api/category", category.Router())
+		r.Mount("/api/record", record.Router())
+	})
 
 	log.Info().Msg(fmt.Sprintf("starting up server on: %s", cfg.Listen.Addr()))
 	server := &http.Server{
